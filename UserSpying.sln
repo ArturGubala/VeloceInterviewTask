@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpying.Server", "Server\UserSpying.Server.csproj", "{C47D6985-5143-4200-8F67-B9C10C7F570A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserSpying.Server", "Server\UserSpying.Server.csproj", "{C47D6985-5143-4200-8F67-B9C10C7F570A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpying.Client", "Client\UserSpying.Client.csproj", "{003B07BE-BE1B-4A80-AA86-34C26DB4D550}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserSpying.Client", "Client\UserSpying.Client.csproj", "{003B07BE-BE1B-4A80-AA86-34C26DB4D550}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpying.Shared", "Shared\UserSpying.Shared.csproj", "{75BFC95D-3DB8-4EC5-B073-27B596992E20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserSpying.Shared", "Shared\UserSpying.Shared.csproj", "{75BFC95D-3DB8-4EC5-B073-27B596992E20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

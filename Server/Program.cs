@@ -11,9 +11,18 @@ db.Database.EnsureCreated();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyCORS", builder =>
+    {
+        builder.WithOrigins("https://localhost:7199")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
-
+app.UseCors("MyCORS");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

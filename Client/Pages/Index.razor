@@ -1,0 +1,149 @@
+﻿@page "/"
+
+@using UserSpying.Client.HttpRepository.Users
+@using UserSpying.Client.Models
+@using UserSpying.Client.Shared.Components
+@using UsersSpying.Shared.Models
+
+@inject IUsers UsersHttpRepository
+
+<MudGrid>
+    <MudItem xs="12" Class="px-8 pt-5">
+        <MudTable Items="@CustomUsers" Dense="true" Hover="true" ReadOnly="false" CanCancelEdit="true" Filter="new Func<CustomUser,bool>(FilterFunc)"
+                  SortLabel="Sort By" CommitEditTooltip="Commit Edit" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+                  RowEditCommit="ItemHasBeenCommitted" IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End"
+                  EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick" HeaderClass="customHeader" RowClass="customRow">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Użytkownicy</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString" Placeholder="Wyszukaj" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<User, object>(x => x.FirstName)">Imię</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<User, object>(x => x.LastName)">Nazwisko</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<User, object>(x => x.DateOfBirth)">Data urodzenia</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<User, object>(x => x.Gender.Name)">Płeć</MudTableSortLabel></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudToggleIconButton @bind-Toggled="@context.ShowDetails"
+                                         Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="@Color.Inherit" Title="Pokaż szczegóły"
+                                         ToggledIcon="@Icons.Material.Filled.VisibilityOff" ToggledSize="Size.Small" ToggledColor="@Color.Inherit" ToggledTitle="Ukryj szczegóły" />
+                </MudTd>
+                <MudTd DataLabel="Imię">@context.FirstName</MudTd>
+                <MudTd DataLabel="Nazwisko">@context.LastName</MudTd>
+                <MudTd DataLabel="Data urodzenia">@context.DateOfBirth</MudTd>
+                <MudTd DataLabel="Płeć">@context.Gender.Name</MudTd>
+            </RowTemplate>
+            <RowEditingTemplate>
+                <MudTd></MudTd>
+                <MudTd DataLabel="Sign">
+                    <MudTextField @bind-Value="@context.FirstName" Required/>
+                </MudTd>
+                <MudTd DataLabel="Name">
+                    <MudTextField @bind-Value="@context.LastName" Required/>
+                </MudTd>
+                <MudTd DataLabel="Position">
+                    <MudTextField @bind-Value="@context.DateOfBirth" Required/>
+                </MudTd>
+                <MudTd DataLabel="Molar mass">
+                    <MudTextField @bind-Value="@context.Gender.Name" Required/>
+                </MudTd>
+            </RowEditingTemplate>
+            <EditButtonContent Context="button">
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+            </EditButtonContent>
+            <ChildRowContent>
+                @if (context.ShowDetails)
+                {
+                    <MudTr>
+                        <td colspan="6">
+                            <MudCard Elevation="0">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body2">Dodatkowe pola użytkownika <strong>@context.FirstName @context.LastName</strong></MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent Class="pa-0">
+                                    <DetailTable CustomFields="@context.CustomFields.ToList()" />
+                                </MudCardContent>
+                            </MudCard>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+         </MudTable>
+    </MudItem>
+</MudGrid>
+
+<style>
+    .customHeader {
+        background-color: #4e8074 !important;
+        #4e8074
+    }
+
+    .customRow {
+        background-color: #68baa6 !important;
+    }
+
+    .mud-table-root .mud-table-head .mud-table-cell{
+        color: #fff;
+    }
+    </style>
+
+@code {
+    List<CustomUser> CustomUsers = new List<CustomUser>();
+    private string searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await UsersHttpRepository.GetUsersAsync();
+        CustomUsers = response.Data.ToList() ?? new List<CustomUser>();
+    }
+
+    private void BackupItem(object element)
+    {
+        // elementBeforeEdit = new()
+        // {
+        //     Sign = ((Element)element).Sign,
+        //     Name = ((Element)element).Name,
+        //     Molar = ((Element)element).Molar,
+        //     Position = ((Element)element).Position
+        // };
+        // AddEditionEvent($"RowEditPreview event: made a backup of Element {((Element)element).Name}");
+    }
+
+    private void ItemHasBeenCommitted(object element)
+    {
+        // AddEditionEvent($"RowEditCommit event: Changes to Element {((Element)element).Name} committed");
+    }
+
+    private void ResetItemToOriginalValues(object element)
+    {
+        // ((Element)element).Sign = elementBeforeEdit.Sign;
+        // ((Element)element).Name = elementBeforeEdit.Name;
+        // ((Element)element).Molar = elementBeforeEdit.Molar;
+        // ((Element)element).Position = elementBeforeEdit.Position;
+        // AddEditionEvent($"RowEditCancel event: Editing of Element {((Element)element).Name} canceled");
+    }
+
+    private bool FilterFunc(CustomUser customUser)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (customUser.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (customUser.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (customUser.Gender.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void ShowBtnPress(int id)
+    {
+        CustomUser customUser = CustomUsers.First(cu => cu.Id == id);
+        customUser.ShowDetails = !customUser.ShowDetails;
+    }
+}
