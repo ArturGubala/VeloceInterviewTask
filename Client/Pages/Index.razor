@@ -3,18 +3,23 @@
 @using UserSpying.Client.HttpRepository.Users
 @using UserSpying.Client.Models
 @using UserSpying.Client.Shared.Components
-@using UsersSpying.Shared.Models
+@using UserSpying.Client.Shared.Dialogs
+@using UserSpying.Shared.Models
+@using UserSpying.Client.HttpRepository.Genders
+@using Gender = UserSpying.Shared.Models.Gender
 
 @inject IUsers UsersHttpRepository
+@inject IGender GendersHttpRepository
+@inject IDialogService DialogService
 
 <MudGrid>
     <MudItem xs="12" Class="px-8 pt-5">
         <MudTable Items="@CustomUsers" Dense="true" Hover="true" ReadOnly="false" CanCancelEdit="true" Filter="new Func<CustomUser,bool>(FilterFunc)"
                   SortLabel="Sort By" CommitEditTooltip="Commit Edit" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
-                  RowEditCommit="ItemHasBeenCommitted" IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End"
+                  IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" OnCommitEditClick="ItemHasBeenCommitted"
                   EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick" HeaderClass="customHeader" RowClass="customRow">
             <ToolBarContent>
-                <MudText Typo="Typo.h6">Użytkownicy</MudText>
+                <MudButton Class="mr-2" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PersonAddAlt" Color="Color.Inherit" Size="Size.Small" OnClick="OpenDialog">Dodaj użytkownika</MudButton>
                 <MudSpacer />
                 <MudTextField @bind-Value="searchString" Placeholder="Wyszukaj" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
@@ -45,7 +50,8 @@
                     <MudTextField @bind-Value="@context.LastName" Required/>
                 </MudTd>
                 <MudTd DataLabel="Position">
-                    <MudTextField @bind-Value="@context.DateOfBirth" Required/>
+                     <MudDatePicker Label="Data urodzenia" @bind-Date="@context.DateOfBirth" Variant="Variant.Text" Required RequiredError="Musisz podać datę urodzenia"
+                                    Validation="@((DateTime? date) => date < DateTime.Now)" ErrorText="Użytkownik pochodzi z przyszłości? Podaj poprawną datę"></MudDatePicker>
                 </MudTd>
                 <MudTd DataLabel="Molar mass">
                     <MudTextField @bind-Value="@context.Gender.Name" Required/>
@@ -94,38 +100,56 @@
 
 @code {
     List<CustomUser> CustomUsers = new List<CustomUser>();
+    List<Gender>? Genders = new List<Gender>();
     private string searchString = "";
+    private CustomUser customUserBeforeEdit;
+    private int? currentlyEditingUser;
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await UsersHttpRepository.GetUsersAsync();
-        CustomUsers = response.Data.ToList() ?? new List<CustomUser>();
+        var userResponse = await UsersHttpRepository.GetUsersAsync();
+        CustomUsers = userResponse.Data.ToList() ?? new List<CustomUser>();
+
+        var genderResponse = await GendersHttpRepository.GetGenders();
+        Genders = genderResponse.Data.ToList() ?? new List<Gender>();
     }
 
-    private void BackupItem(object element)
+    private void BackupItem(object customUser)
     {
-        // elementBeforeEdit = new()
-        // {
-        //     Sign = ((Element)element).Sign,
-        //     Name = ((Element)element).Name,
-        //     Molar = ((Element)element).Molar,
-        //     Position = ((Element)element).Position
-        // };
-        // AddEditionEvent($"RowEditPreview event: made a backup of Element {((Element)element).Name}");
+        customUserBeforeEdit = new()
+        {
+            FirstName = ((CustomUser)customUser).FirstName,
+            LastName = ((CustomUser)customUser).LastName,
+            DateOfBirth = ((CustomUser)customUser).DateOfBirth,
+            Gender = ((CustomUser)customUser).Gender
+        };
+
+        currentlyEditingUser = ((CustomUser)customUser).Id;
     }
 
-    private void ItemHasBeenCommitted(object element)
+    private async Task ItemHasBeenCommitted(object customUser)
     {
-        // AddEditionEvent($"RowEditCommit event: Changes to Element {((Element)element).Name} committed");
+        // TODO: Rozgryźć jak wywołać tu asynchroniczną metodę
+        CustomUser currentEditUser = CustomUsers.First(u => u.Id == currentlyEditingUser);
+        UpsertUser upsertUser = new UpsertUser()
+        {
+            FirstName = currentEditUser.FirstName,
+            LastName = currentEditUser.LastName,
+            DateOfBirth = currentEditUser.DateOfBirth,
+            GenderId = currentEditUser.GenderId
+        };
+
+        Response<int?> response = await UsersHttpRepository.UpdateUserAsync((int)currentlyEditingUser, upsertUser);
     }
 
-    private void ResetItemToOriginalValues(object element)
+    private void ResetItemToOriginalValues(object customUser)
     {
-        // ((Element)element).Sign = elementBeforeEdit.Sign;
-        // ((Element)element).Name = elementBeforeEdit.Name;
-        // ((Element)element).Molar = elementBeforeEdit.Molar;
-        // ((Element)element).Position = elementBeforeEdit.Position;
-        // AddEditionEvent($"RowEditCancel event: Editing of Element {((Element)element).Name} canceled");
+        ((CustomUser)customUser).FirstName = customUserBeforeEdit.FirstName;
+        ((CustomUser)customUser).LastName = customUserBeforeEdit.LastName;
+        ((CustomUser)customUser).DateOfBirth = customUserBeforeEdit.DateOfBirth;
+        ((CustomUser)customUser).Gender.Name = customUserBeforeEdit.Gender.Name;
+
+        currentlyEditingUser = null;
     }
 
     private bool FilterFunc(CustomUser customUser)
@@ -141,9 +165,21 @@
         return false;
     }
 
-    private void ShowBtnPress(int id)
+    private void OpenDialog()
     {
-        CustomUser customUser = CustomUsers.First(cu => cu.Id == id);
-        customUser.ShowDetails = !customUser.ShowDetails;
+        var options = new DialogOptions
+        {
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            CloseOnEscapeKey = false,
+        };
+        var parameters = new DialogParameters<AddUserDialog>();
+        parameters.Add<IEnumerable<Gender>>(x => x.Genders, Genders);
+
+        DialogService.Show<AddUserDialog>("Dodaj użytkownika", parameters, options);
     }
+
 }

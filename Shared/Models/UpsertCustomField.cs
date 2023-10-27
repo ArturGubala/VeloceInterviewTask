@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UsersSpying.Shared.Models
+namespace UserSpying.Shared.Models
 {
     public record UpsertCustomField
     {

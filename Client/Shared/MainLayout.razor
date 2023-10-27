@@ -1,17 +1,19 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider />
+<MudDialogProvider />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="true">
+        <MudText Typo="Typo.h5" Class="ml-3 d-flex"><MudIcon Icon="@Icons.Material.Filled.Fingerprint" Size="Size.Large" />UserSpying</MudText>
+        <MudSpacer />
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" TransformOrigin="Origin.TopRight" AnchorOrigin="Origin.BottomRight">
+            <MudText Style="text-align: center">👋 Szpiegu</MudText>
+            <MudDivider Class="mb-1 mt-2"></MudDivider>
+            <MudMenuItem><MudText Class="d-flex"><MudIcon Class="mr-2" Icon="@Icons.Material.Filled.PersonAddAlt" />Dodaj użytkownika</MudText></MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>

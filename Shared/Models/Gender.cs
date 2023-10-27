@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
-namespace UsersSpying.Shared.Models
+namespace UserSpying.Shared.Models
 {
     public record Gender
     {
@@ -11,5 +12,7 @@ namespace UsersSpying.Shared.Models
         public char Abbreviation { get; set; }
         [Required]
         public string Honorific { get; set; }
+        [JsonIgnore]
+        public virtual IEnumerable<User> Users { get; set; }
     }
 }

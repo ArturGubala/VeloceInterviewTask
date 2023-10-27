@@ -1,6 +1,7 @@
 ﻿using Flurl;
 using Flurl.Http;
 using UserSpying.Client.Models;
+using UserSpying.Shared.Models;
 
 namespace UserSpying.Client.HttpRepository.Users
 {
@@ -17,18 +18,11 @@ namespace UserSpying.Client.HttpRepository.Users
         {
             try
             {
-                var data = await _httpClient.BaseAddress
+                Response<IEnumerable<CustomUser>> response = await _httpClient.BaseAddress
                     .AppendPathSegment("users")
                     .WithHeader("Accept", "*/*")
                     .WithHeader("Content-Type", "application/json")
-                    .GetJsonAsync<IEnumerable<CustomUser>>();
-
-                var response = new Response<IEnumerable<CustomUser>>()
-                {
-                    Data = data,
-                    StatusCode = null,
-                    Message = ""
-                };
+                    .GetJsonAsync<Response<IEnumerable<CustomUser>>>();
 
                 return response;
             }
@@ -39,14 +33,44 @@ namespace UserSpying.Client.HttpRepository.Users
             }
         }
 
-        public async Task CreateUserAsync(CustomUser user)
+        public async Task<Response<int?>> CreateUserAsync(UpsertUser user)
         {
-            throw new NotImplementedException();
+            try
+            {
+                Response<int?> response = await _httpClient.BaseAddress
+                    .AppendPathSegment("users")
+                    .WithHeader("Accept", "*/*")
+                    .WithHeader("Content-Type", "application/json")
+                    .PostJsonAsync(user)
+                    .ReceiveJson<Response<int?>>();
+
+                return response;
+            }
+            catch (FlurlHttpException flurlHttpException)
+            {
+                var test = await flurlHttpException.GetResponseJsonAsync();
+                return await flurlHttpException.GetResponseJsonAsync<Response<int?>>();
+            }
         }
 
-        public async Task UpdateUserAsync(CustomUser user)
+        public async Task<Response<int?>> UpdateUserAsync(int userId, UpsertUser user)
         {
-            throw new NotImplementedException();
+            try
+            {
+                Response<int?> response = await _httpClient.BaseAddress
+                    .AppendPathSegment($"users/{userId}")
+                    .WithHeader("Accept", "*/*")
+                    .WithHeader("Content-Type", "application/json")
+                    .PutJsonAsync(user)
+                    .ReceiveJson<Response<int?>>();
+
+                return response;
+            }
+            catch (FlurlHttpException flurlHttpException)
+            {
+                var test = await flurlHttpException.GetResponseJsonAsync();
+                return await flurlHttpException.GetResponseJsonAsync<Response<int?>>();
+            }
         }
     }
 }

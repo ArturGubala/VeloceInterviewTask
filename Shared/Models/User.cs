@@ -1,4 +1,4 @@
-﻿namespace UsersSpying.Shared.Models 
+﻿namespace UserSpying.Shared.Models 
 {
     public record User : UpsertUser
     {

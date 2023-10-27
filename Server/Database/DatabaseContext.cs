@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using UsersSpying.Shared.Models;
+using UserSpying.Shared.Models;
 
-namespace UsersSpying.Server.Database
+namespace UserSpying.Server.Database
 {
     public class DatabaseContext : DbContext
     {
@@ -38,9 +38,9 @@ namespace UsersSpying.Server.Database
                     .HasColumnType("date");
 
                 entity.HasOne(u => u.Gender)
-                    .WithOne()
-                    .HasForeignKey<User>(u => u.GenderId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .WithMany(g => g.Users)
+                    .HasForeignKey(u => u.GenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<CustomField>(entity =>

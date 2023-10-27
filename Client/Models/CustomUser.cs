@@ -1,4 +1,4 @@
-﻿using UsersSpying.Shared.Models;
+﻿using UserSpying.Shared.Models;
 
 namespace UserSpying.Client.Models
 {

@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
-using UsersSpying.Server.Database;
-using UsersSpying.Shared.Models;
+using UserSpying.Client.Models;
+using UserSpying.Shared.Models;
+using UserSpying.Server.Database;
+using UserSpying.Shared.Models;
+using UserSpying.Client.HttpRepository.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,10 +38,33 @@ app.MapGet("/users", async () =>
 {
     using (var db = new DatabaseContext())
     {
-        return Results.Ok(await db.Users
-            .Include(u => u.Gender)
-            .Include(u => u.CustomFields)
-            .ToListAsync());
+        try
+        {
+            List<User> users = await db.Users
+                .Include(u => u.Gender)
+                .Include(u => u.CustomFields)
+                .ToListAsync();
+
+            return Results.Ok(new Response<List<User>>()
+            {
+                Data = users,
+                Success = true,
+                Message = "",
+                StatusCode = StatusCodes.Status200OK
+            });
+        }
+        catch (Exception e)
+        {
+            return Results.BadRequest(new Response<int?>()
+            {
+                Data = null,
+                Success = false,
+                Message = e.Message,
+                StatusCode = StatusCodes.Status400BadRequest
+            });
+        }
+
+        
     }
 });
 
@@ -69,8 +95,62 @@ app.MapPost("/users", async ([FromBody] UpsertUser upsertUser) =>
         };
 
         db.Users.Add(newUser);
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Results.BadRequest(new Response<int?>()
+            {
+                Data = null,
+                Success = false,
+                Message = e.Message,
+                StatusCode = StatusCodes.Status400BadRequest
+            });
+        }
+
+        return Results.Ok(new Response<int?>()
+        {
+            Data = newUser.Id,
+            Success = true,
+            Message = "",
+            StatusCode = StatusCodes.Status200OK
+        });
+    }
+});
+
+app.MapPut("/users/{id}", async ([FromRoute] int id, [FromBody] UpsertUser upsertUser) =>
+{
+    using (var db = new DatabaseContext())
+    {
+        User? user = await db.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null)
+        {
+            return Results.NotFound(new Response<int?>()
+            {
+                Data = null,
+                Success = false,
+                Message = "Nie odnaleziono u¿ytkownika",
+                StatusCode = StatusCodes.Status404NotFound
+            });
+        }
+
+        user.FirstName = upsertUser.FirstName;
+        user.LastName = upsertUser.LastName;
+        user.DateOfBirth = upsertUser.DateOfBirth;
+        user.GenderId = upsertUser.GenderId;
+
         await db.SaveChangesAsync();
-        return Results.NoContent();
+
+        return Results.Ok(new Response<int>()
+        {
+            Data = user.Id,
+            Success = true,
+            Message = "",
+            StatusCode = StatusCodes.Status200OK
+        });
     }
 });
 
@@ -86,7 +166,7 @@ app.MapPost("/users/{id}/custom-fields", async ([FromRoute] int id, [FromBody] U
             Value = upsertCustomField.Value
         };
 
-        db.CustomFields.Add(newCustomField);
+        await db.CustomFields.AddAsync(newCustomField);
 
         try
         {
@@ -94,10 +174,22 @@ app.MapPost("/users/{id}/custom-fields", async ([FromRoute] int id, [FromBody] U
         }
         catch (DbUpdateException ex) when ((ex.InnerException as SqliteException)?.SqliteExtendedErrorCode == 2067)
         {
-                return Results.Conflict($"Istnieje ju¿ pole {upsertCustomField.Name} dla u¿ytkownika o id {id}");
+            return Results.Conflict(new Response<int?>()
+            {
+                Data = null,
+                Success = false,
+                Message = $"Istnieje ju¿ pole {upsertCustomField.Name} dla u¿ytkownika o id {id}",
+                StatusCode = StatusCodes.Status409Conflict
+            });
         }
 
-        return Results.NoContent();
+        return Results.Ok(new Response<int>()
+        {
+            Data = 0,
+            Success = true,
+            Message = "",
+            StatusCode = StatusCodes.Status200OK
+        });
     }
 });
 
@@ -127,7 +219,15 @@ app.MapGet("/genders", async () =>
 {
     using (var db = new DatabaseContext())
     {
-        return Results.Ok(await db.Genders.ToListAsync());
+        IEnumerable<Gender> genders = await db.Genders.ToListAsync();
+
+        return Results.Ok(new Response<IEnumerable<Gender>?>()
+        {
+            Data = genders,
+            Success = true,
+            Message = "",
+            StatusCode = StatusCodes.Status200OK
+        });
     }
 });
 

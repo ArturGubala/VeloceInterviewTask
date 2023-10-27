@@ -1,4 +1,5 @@
-﻿@using UsersSpying.Shared.Models
+﻿@using UserSpying.Shared.Models
+
 <MudTable Items="@CustomFields" Context="CustomFieldsContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0"
           Dense="true" ReadOnly="false" CanCancelEdit="true" CommitEditTooltip="Commit Edit" RowEditPreview="BackupItem" 
           RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" IsEditRowSwitchingBlocked="true" 
@@ -23,17 +24,15 @@
 
 @code {
     [Parameter] public List<CustomField> CustomFields { get; set; } = new List<CustomField>();
+    private CustomField customFieldBeforeEdit;
 
     private void BackupItem(object element)
     {
-    // elementBeforeEdit = new()
-    // {
-    //     Sign = ((Element)element).Sign,
-    //     Name = ((Element)element).Name,
-    //     Molar = ((Element)element).Molar,
-    //     Position = ((Element)element).Position
-    // };
-    // AddEditionEvent($"RowEditPreview event: made a backup of Element {((Element)element).Name}");
+        customFieldBeforeEdit = new()
+        {
+            Name = ((CustomField)element).Name,
+            Value = ((CustomField)element).Value
+        };
     }
 
     private void ItemHasBeenCommitted(object element)
@@ -43,10 +42,7 @@
 
     private void ResetItemToOriginalValues(object element)
     {
-    // ((Element)element).Sign = elementBeforeEdit.Sign;
-    // ((Element)element).Name = elementBeforeEdit.Name;
-    // ((Element)element).Molar = elementBeforeEdit.Molar;
-    // ((Element)element).Position = elementBeforeEdit.Position;
-    // AddEditionEvent($"RowEditCancel event: Editing of Element {((Element)element).Name} canceled");
+        ((CustomField)element).Name = customFieldBeforeEdit.Name;
+        ((CustomField)element).Value = customFieldBeforeEdit.Value;
     }
 }
