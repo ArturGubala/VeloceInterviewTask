@@ -70,6 +70,11 @@
         </MudGrid>
     </DialogContent>
     <DialogActions>
+        @if (showAlert)
+        {
+            <MudAlert Severity="alertSeverity" Dense="true" Class="my-2" ShowCloseIcon="true" CloseIconClicked="(() => showAlert = !showAlert)" Variant="Variant.Filled">@alertMessage</MudAlert>
+            <MudSpacer />
+        }
         <MudButton OnClick="Cancel">Anuluj</MudButton>
         <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!formBaseDataSuccess)">Dodaj</MudButton>
     </DialogActions>
@@ -98,15 +103,17 @@
         public string Value { get; set; }
     }
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] MudDialogInstance AddDialog { get; set; }
     [Parameter] public List<Gender> Genders { get; set; } = new List<Gender>();
-    private bool formBaseDataSuccess, formCustomFieldSuccess;
+    private bool formBaseDataSuccess, formCustomFieldSuccess, showAlert = false;
     private MudForm formBaseData, formCustomField;
     private DateTime? dateOfBirth;
     private CustomField customField = new CustomField();
     private UpsertUser upsertUser = new UpsertUser();
     private Gender selectedGender;
     private List<CustomField> customFields = new List<CustomField>();
+    private string alertMessage = string.Empty;
+    private Severity alertSeverity = Severity.Normal;
 
     async Task Submit()
     {
@@ -115,25 +122,26 @@
 
         var userResponse = await UsersHttpRepository.CreateUserAsync(newUser);
 
-        if (userResponse.Success == false)
+        if (!userResponse.Success)
         {
-            Console.WriteLine(userResponse.Message);
+            ShowAlert(Severity.Error, userResponse.Message);
             return;
         }
 
         foreach (CustomField customField in customFields)
         {
-            var response = await CustomFieldHttpRepository.CreateCustomField((int)userResponse.Data, new UpsertCustomField()
+            // TODO: obsłużyć błędy podczas dodawania pola
+            var response = await CustomFieldHttpRepository.CreateCustomField(userResponse.Data.Id, new UpsertCustomField()
             {
                 Name = customField.Name,
                 Value = customField.Value
             });
         }
 
-        MudDialog.Close(DialogResult.Ok(true));
+        AddDialog.Close(DialogResult.Ok(userResponse.Data));
     }
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => AddDialog.Cancel();
 
     private void AddCustomField()
     {
@@ -150,5 +158,12 @@
         }
         if (customFields.Any(cf => cf.Name == name))
             yield return $"Dodano już pole o nazwie \"{name}\"";
+    }
+
+    private void ShowAlert(Severity severity, string message)
+    {
+        showAlert = true;
+        alertSeverity = severity;
+        alertMessage = message;
     }
 }

@@ -11,11 +11,12 @@
 @inject IUsers UsersHttpRepository
 @inject IGender GendersHttpRepository
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-<MudGrid>
-    <MudItem xs="12" Class="px-8 pt-5">
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="6" Class="px-8 pt-5">
         <MudTable Items="@CustomUsers" Dense="true" Hover="true" ReadOnly="false" CanCancelEdit="true" Filter="new Func<CustomUser,bool>(FilterFunc)"
-                  SortLabel="Sort By" CommitEditTooltip="Commit Edit" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+                  SortLabel="Sort By" CommitEditTooltip="Zapisz zmiany" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
                   IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" OnCommitEditClick="ItemHasBeenCommitted"
                   EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick" HeaderClass="customHeader" RowClass="customRow">
             <ToolBarContent>
@@ -25,10 +26,10 @@
             </ToolBarContent>
             <HeaderContent>
                 <MudTh></MudTh>
-                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<User, object>(x => x.FirstName)">Imię</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<User, object>(x => x.LastName)">Nazwisko</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<User, object>(x => x.DateOfBirth)">Data urodzenia</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<User, object>(x => x.Gender.Name)">Płeć</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<CustomUser, object>(x => x.FirstName)">Imię</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<CustomUser, object>(x => x.LastName)">Nazwisko</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<CustomUser, object>(x => x.DateOfBirth)">Data urodzenia</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<CustomUser, object>(x => x.Gender.Name)">Płeć</MudTableSortLabel></MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>
@@ -54,7 +55,14 @@
                                     Validation="@((DateTime? date) => date < DateTime.Now)" ErrorText="Użytkownik pochodzi z przyszłości? Podaj poprawną datę"></MudDatePicker>
                 </MudTd>
                 <MudTd DataLabel="Molar mass">
-                    <MudTextField @bind-Value="@context.Gender.Name" Required/>
+                    @* <MudTextField @bind-Value="@context.Gender.Name" Required/> *@
+                     <MudSelect @bind-Value="@context.Gender" T="Gender" Label="Płeć" Variant="Variant.Text" AnchorOrigin="Origin.BottomCenter" Dense="true">
+                        @foreach (Gender gender in Genders)
+                        {
+                            <MudSelectItem T="Gender" Value="@gender">@gender.Name</MudSelectItem>
+                        }
+
+                    </MudSelect>
                 </MudTd>
             </RowEditingTemplate>
             <EditButtonContent Context="button">
@@ -86,14 +94,13 @@
 <style>
     .customHeader {
         background-color: #4e8074 !important;
-        #4e8074
     }
 
     .customRow {
         background-color: #68baa6 !important;
     }
 
-    .mud-table-root .mud-table-head .mud-table-cell{
+    .mud-table-root .customHeader .mud-table-cell {
         color: #fff;
     }
     </style>
@@ -103,7 +110,7 @@
     List<Gender>? Genders = new List<Gender>();
     private string searchString = "";
     private CustomUser customUserBeforeEdit;
-    private int? currentlyEditingUser;
+    private int? currentlyEditingUserId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -124,32 +131,41 @@
             Gender = ((CustomUser)customUser).Gender
         };
 
-        currentlyEditingUser = ((CustomUser)customUser).Id;
+        currentlyEditingUserId = ((CustomUser)customUser).Id;
     }
 
     private async Task ItemHasBeenCommitted(object customUser)
     {
         // TODO: Rozgryźć jak wywołać tu asynchroniczną metodę
-        CustomUser currentEditUser = CustomUsers.First(u => u.Id == currentlyEditingUser);
+        CustomUser currentEditUser = CustomUsers.First(u => u.Id == currentlyEditingUserId);
         UpsertUser upsertUser = new UpsertUser()
         {
             FirstName = currentEditUser.FirstName,
             LastName = currentEditUser.LastName,
             DateOfBirth = currentEditUser.DateOfBirth,
-            GenderId = currentEditUser.GenderId
+            GenderId = currentEditUser.Gender.Id
         };
 
-        Response<int?> response = await UsersHttpRepository.UpdateUserAsync((int)currentlyEditingUser, upsertUser);
+        Response<int?> response = await UsersHttpRepository.UpdateUserAsync((int)currentlyEditingUserId, upsertUser);
+        if (response.Success)
+        {
+            Snackbar.Add($"Pomyślnie zaktualizowano dane użytkownika {upsertUser.FirstName} {upsertUser.LastName}", Severity.Success);
+        }
+
     }
 
     private void ResetItemToOriginalValues(object customUser)
     {
+        if (customUser == null)
+        {
+            return;
+        }
         ((CustomUser)customUser).FirstName = customUserBeforeEdit.FirstName;
         ((CustomUser)customUser).LastName = customUserBeforeEdit.LastName;
         ((CustomUser)customUser).DateOfBirth = customUserBeforeEdit.DateOfBirth;
         ((CustomUser)customUser).Gender.Name = customUserBeforeEdit.Gender.Name;
 
-        currentlyEditingUser = null;
+        currentlyEditingUserId = null;
     }
 
     private bool FilterFunc(CustomUser customUser)
@@ -165,7 +181,7 @@
         return false;
     }
 
-    private void OpenDialog()
+    private async Task OpenDialog()
     {
         var options = new DialogOptions
         {
@@ -179,7 +195,18 @@
         var parameters = new DialogParameters<AddUserDialog>();
         parameters.Add<IEnumerable<Gender>>(x => x.Genders, Genders);
 
-        DialogService.Show<AddUserDialog>("Dodaj użytkownika", parameters, options);
+        var dialogResult = await DialogService.Show<AddUserDialog>("Dodaj użytkownika", parameters, options).Result;
+        var test = (User)dialogResult.Data;
+        if (test != null)
+        {
+            Response<CustomUser?> newUser = await UsersHttpRepository.GetUserAsync(test.Id);
+            if (newUser.Data != null)
+            {
+                CustomUsers.Add(newUser.Data);
+                Snackbar.Add($"Pomyślnie dodano użytkownika {newUser.Data.FirstName} {newUser.Data.LastName}", Severity.Success);
+                StateHasChanged();
+            }
+        }
     }
 
 }

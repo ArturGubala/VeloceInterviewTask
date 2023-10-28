@@ -78,7 +78,24 @@ app.MapGet("/users/{id}", async ([FromRoute]int id) =>
             .Where(u => u.Id == id)
             .FirstOrDefaultAsync();
 
-        return foundUser != null ? Results.Ok(foundUser) : Results.NotFound();
+        if (foundUser != null)
+        {
+            return Results.Ok(new Response<User>()
+            {
+                Data = foundUser,
+                Success = true,
+                Message = "",
+                StatusCode = StatusCodes.Status200OK
+            });
+        }
+
+        return Results.BadRequest(new Response<User?>()
+        {
+            Data = null,
+            Success = false,
+            Message = "Nie odnaleziono u¿ytkownika",
+            StatusCode = StatusCodes.Status404NotFound
+        });
     }
 });
 
@@ -110,9 +127,9 @@ app.MapPost("/users", async ([FromBody] UpsertUser upsertUser) =>
             });
         }
 
-        return Results.Ok(new Response<int?>()
+        return Results.Ok(new Response<User?>()
         {
-            Data = newUser.Id,
+            Data = newUser,
             Success = true,
             Message = "",
             StatusCode = StatusCodes.Status200OK
@@ -203,15 +220,26 @@ app.MapPut("/custom-fields/{id}", async ([FromRoute] int id, [FromBody] UpsertCu
 
         if (foundCustomField == null)
         {
-            return Results.NotFound();
+            return Results.NotFound(new Response<CustomField?>()
+            {
+                Data = null,
+                Success = false,
+                Message = "",
+                StatusCode = StatusCodes.Status404NotFound
+            });
         }
 
-        foundCustomField.Name = upsertUstomField.Name;
         foundCustomField.Value = upsertUstomField.Value;
 
         db.CustomFields.Update(foundCustomField);
         await db.SaveChangesAsync();
-        return Results.NoContent();
+        return Results.Ok(new Response<CustomField?>()
+        {
+            Data = foundCustomField,
+            Success = true,
+            Message = "",
+            StatusCode = StatusCodes.Status200OK
+        });
     }
 });
 

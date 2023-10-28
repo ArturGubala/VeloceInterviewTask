@@ -14,6 +14,26 @@ namespace UserSpying.Client.HttpRepository.Users
             _httpClient = httpClient;
         }
 
+        public async Task<Response<CustomUser>> GetUserAsync(int id)
+        {
+            try
+            {
+                Response<CustomUser> response = await _httpClient.BaseAddress
+                    .AppendPathSegment("users")
+                    .AppendPathSegment($"{id}")
+                    .WithHeader("Accept", "*/*")
+                    .WithHeader("Content-Type", "application/json")
+                    .GetJsonAsync<Response<CustomUser>>();
+
+                return response;
+            }
+            catch (FlurlHttpException flurlHttpException)
+            {
+                var test = await flurlHttpException.GetResponseJsonAsync();
+                return await flurlHttpException.GetResponseJsonAsync<Response<CustomUser>>();
+            }
+        }
+
         public async Task<Response<IEnumerable<CustomUser>>> GetUsersAsync()
         {
             try
@@ -33,23 +53,23 @@ namespace UserSpying.Client.HttpRepository.Users
             }
         }
 
-        public async Task<Response<int?>> CreateUserAsync(UpsertUser user)
+        public async Task<Response<User?>> CreateUserAsync(UpsertUser user)
         {
             try
             {
-                Response<int?> response = await _httpClient.BaseAddress
+                Response<User?> response = await _httpClient.BaseAddress
                     .AppendPathSegment("users")
                     .WithHeader("Accept", "*/*")
                     .WithHeader("Content-Type", "application/json")
                     .PostJsonAsync(user)
-                    .ReceiveJson<Response<int?>>();
+                    .ReceiveJson<Response<User?>>();
 
                 return response;
             }
             catch (FlurlHttpException flurlHttpException)
             {
                 var test = await flurlHttpException.GetResponseJsonAsync();
-                return await flurlHttpException.GetResponseJsonAsync<Response<int?>>();
+                return await flurlHttpException.GetResponseJsonAsync<Response<User?>>();
             }
         }
 

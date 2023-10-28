@@ -1,8 +1,13 @@
 ﻿@using UserSpying.Shared.Models
+@using CustomField = UserSpying.Shared.Models.CustomField
+@using UserSpying.Client.HttpRepository.CustomFields
+
+@inject ICustomField CustomFieldHttpRepository
+@inject ISnackbar Snackbar
 
 <MudTable Items="@CustomFields" Context="CustomFieldsContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0"
-          Dense="true" ReadOnly="false" CanCancelEdit="true" CommitEditTooltip="Commit Edit" RowEditPreview="BackupItem" 
-          RowEditCancel="ResetItemToOriginalValues" RowEditCommit="ItemHasBeenCommitted" IsEditRowSwitchingBlocked="true" 
+          Dense="true" ReadOnly="false" CanCancelEdit="true" CommitEditTooltip="Zatwierdź zmiany" RowEditPreview="BackupItem" 
+          RowEditCancel="ResetItemToOriginalValues" OnCommitEditClick="ItemHasBeenCommitted" IsEditRowSwitchingBlocked="true" 
           ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick">
     <HeaderContent>
         <MudTh>Nazwa</MudTh>
@@ -13,11 +18,11 @@
         <MudTd DataLabel="Wartość">@CustomFieldsContext.Value</MudTd>
     </RowTemplate>
     <RowEditingTemplate>
-        <MudTd DataLabel="Sign">
-            <MudTextField @bind-Value="@CustomFieldsContext.Name" Required/>
+        <MudTd DataLabel="Nazwa">
+            <MudText>@CustomFieldsContext.Name</MudText>
         </MudTd>
-        <MudTd DataLabel="Name">
-             <MudTextField @bind-Value="@CustomFieldsContext.Value" Required />
+        <MudTd DataLabel="Wartość">
+             <MudTextField @bind-Value="@CustomFieldsContext.Value" />
         </MudTd>
     </RowEditingTemplate>
 </MudTable>
@@ -25,6 +30,7 @@
 @code {
     [Parameter] public List<CustomField> CustomFields { get; set; } = new List<CustomField>();
     private CustomField customFieldBeforeEdit;
+    private int? currentlyEditingCustomFieldId;
 
     private void BackupItem(object element)
     {
@@ -33,16 +39,31 @@
             Name = ((CustomField)element).Name,
             Value = ((CustomField)element).Value
         };
+
+        currentlyEditingCustomFieldId = ((CustomField)element).Id;
     }
 
-    private void ItemHasBeenCommitted(object element)
+    private async Task ItemHasBeenCommitted(object element)
     {
-    // AddEditionEvent($"RowEditCommit event: Changes to Element {((Element)element).Name} committed");
+        CustomField currentEditCustomField = CustomFields.First(cf => cf.Id == currentlyEditingCustomFieldId);
+        UpsertCustomField upsertCustomField = new UpsertCustomField()
+        {
+            Name = currentEditCustomField.Name,
+            Value = currentEditCustomField.Value
+        };
+
+        Response<CustomField?> response = await CustomFieldHttpRepository.updateCustomFieldAsync(currentEditCustomField.Id, upsertCustomField);
+        if (response.Success)
+        {
+            Snackbar.Add($"Pomyślnie zaktualizowano wartość pola {currentEditCustomField.Name}", Severity.Success);
+        }
     }
 
     private void ResetItemToOriginalValues(object element)
     {
         ((CustomField)element).Name = customFieldBeforeEdit.Name;
         ((CustomField)element).Value = customFieldBeforeEdit.Value;
+
+        currentlyEditingCustomFieldId = null;
     }
 }
