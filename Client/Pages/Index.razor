@@ -6,10 +6,11 @@
 @using UserSpying.Client.Shared.Dialogs
 @using UserSpying.Shared.Models
 @using UserSpying.Client.HttpRepository.Genders
-@using Gender = UserSpying.Shared.Models.Gender
+@using UserSpying.Client.HttpRepository.Report
 
-@inject IUsers UsersHttpRepository
-@inject IGender GendersHttpRepository
+@inject IUsersHttpRepository UsersHttpRepository
+@inject IGenderHttpRepository GendersHttpRepository
+@inject IReportHttpRepository ReportHttpRepository
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -21,6 +22,10 @@
                   EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick" HeaderClass="customHeader" RowClass="customRow">
             <ToolBarContent>
                 <MudButton Class="mr-2" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PersonAddAlt" Color="Color.Inherit" Size="Size.Small" OnClick="OpenDialog">Dodaj użytkownika</MudButton>
+                <MudMenu StartIcon="@Icons.Material.Filled.TextSnippet" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Generuj raport" Color="Color.Inherit" Variant="Variant.Filled" Size="Size.Small">
+                    <MudMenuItem OnClick=@(() => GenerateReport("excel"))>Excel</MudMenuItem>
+                    <MudMenuItem OnClick=@(() => GenerateReport("csv"))>Csv</MudMenuItem>
+                </MudMenu>
                 <MudSpacer />
                 <MudTextField @bind-Value="searchString" Placeholder="Wyszukaj" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
@@ -52,10 +57,9 @@
                 </MudTd>
                 <MudTd DataLabel="Position">
                      <MudDatePicker Label="Data urodzenia" @bind-Date="@context.DateOfBirth" Variant="Variant.Text" Required RequiredError="Musisz podać datę urodzenia"
-                                    Validation="@((DateTime? date) => date < DateTime.Now)" ErrorText="Użytkownik pochodzi z przyszłości? Podaj poprawną datę"></MudDatePicker>
+                                    Validation="@(new Func<DateTime?, string>(ChackDate))" ErrorText="Użytkownik pochodzi z przyszłości? Podaj poprawną datę"></MudDatePicker>
                 </MudTd>
                 <MudTd DataLabel="Molar mass">
-                    @* <MudTextField @bind-Value="@context.Gender.Name" Required/> *@
                      <MudSelect @bind-Value="@context.Gender" T="Gender" Label="Płeć" Variant="Variant.Text" AnchorOrigin="Origin.BottomCenter" Dense="true">
                         @foreach (Gender gender in Genders)
                         {
@@ -136,7 +140,6 @@
 
     private async Task ItemHasBeenCommitted(object customUser)
     {
-        // TODO: Rozgryźć jak wywołać tu asynchroniczną metodę
         CustomUser currentEditUser = CustomUsers.First(u => u.Id == currentlyEditingUserId);
         UpsertUser upsertUser = new UpsertUser()
         {
@@ -209,4 +212,17 @@
         }
     }
 
+    private async Task GenerateReport(string type)
+    {
+        await ReportHttpRepository.GenerateReportAsync(type);
+    }
+
+    private string ChackDate(DateTime? dateTime)
+    {
+        if (dateTime > DateTime.Now)
+        {
+            return "Użytkownik pochodzi z przyszłości? Podaj poprawną datę";
+        }
+        return "";
+    }
 }

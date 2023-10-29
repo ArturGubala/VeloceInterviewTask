@@ -5,11 +5,11 @@ using UserSpying.Shared.Models;
 
 namespace UserSpying.Client.HttpRepository.Users
 {
-    public class Users : IUsers
+    public class UsersHttpRepository : IUsersHttpRepository
     {
         private readonly HttpClient _httpClient;
 
-        public Users(HttpClient httpClient)
+        public UsersHttpRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }

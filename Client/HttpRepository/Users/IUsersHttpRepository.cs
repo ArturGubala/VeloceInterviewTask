@@ -3,7 +3,7 @@ using UserSpying.Shared.Models;
 
 namespace UserSpying.Client.HttpRepository.Users
 {
-    public interface IUsers
+    public interface IUsersHttpRepository
     {
         Task<Response<CustomUser>> GetUserAsync(int id);
         Task<Response<IEnumerable<CustomUser>>> GetUsersAsync();

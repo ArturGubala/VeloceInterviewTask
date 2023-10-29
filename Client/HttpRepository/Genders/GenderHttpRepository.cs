@@ -4,31 +4,31 @@ using UserSpying.Shared.Models;
 
 namespace UserSpying.Client.HttpRepository.Genders
 {
-    public class Gender : IGender
+    public class GenderHttpRepository : IGenderHttpRepository
     {
         private readonly HttpClient _httpClient;
 
-        public Gender(HttpClient httpClient)
+        public GenderHttpRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
-        public async Task<Response<IEnumerable<UserSpying.Shared.Models.Gender>?>> GetGenders()
+        public async Task<Response<IEnumerable<Gender>?>> GetGenders()
         {
             try
             {
-                Response<IEnumerable<UserSpying.Shared.Models.Gender>?> response = await _httpClient.BaseAddress
+                Response<IEnumerable<Gender>?> response = await _httpClient.BaseAddress
                     .AppendPathSegment("genders")
                     .WithHeader("Accept", "*/*")
                     .WithHeader("Content-Type", "application/json")
-                    .GetJsonAsync<Response<IEnumerable<UserSpying.Shared.Models.Gender>?>>();
+                    .GetJsonAsync<Response<IEnumerable<Gender>?>>();
 
                 return response;
             }
             catch (FlurlHttpException flurlHttpException)
             {
                 var test = await flurlHttpException.GetResponseJsonAsync();
-                return await flurlHttpException.GetResponseJsonAsync<Response<IEnumerable<UserSpying.Shared.Models.Gender>?>>();
+                return await flurlHttpException.GetResponseJsonAsync<Response<IEnumerable<Gender>?>>();
             }
         }
     }

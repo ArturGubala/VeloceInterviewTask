@@ -6,6 +6,7 @@ using UserSpying.Client.HttpRepository.Users;
 using UserSpying.Client.HttpRepository.Genders;
 using UserSpying.Client.HttpRepository.CustomFields;
 using MudBlazor;
+using UserSpying.Client.HttpRepository.Report;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -23,8 +24,9 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.HideTransitionDuration = 500;
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
 });
-builder.Services.AddScoped<IUsers, Users>();
-builder.Services.AddScoped<IGender, Gender>();
-builder.Services.AddScoped<ICustomField, CustomField>();
+builder.Services.AddScoped<IUsersHttpRepository, UsersHttpRepository>();
+builder.Services.AddScoped<IGenderHttpRepository, GenderHttpRepository>();
+builder.Services.AddScoped<ICustomFieldHttpRepository, CustomFieldHttpRepository>();
+builder.Services.AddScoped<IReportHttpRepository, ReportHttpRepository>();
 
 await builder.Build().RunAsync();

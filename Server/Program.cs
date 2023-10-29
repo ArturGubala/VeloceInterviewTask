@@ -1,11 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
-using UserSpying.Client.Models;
 using UserSpying.Shared.Models;
 using UserSpying.Server.Database;
-using UserSpying.Shared.Models;
-using UserSpying.Client.HttpRepository.Users;
+using UserSpying.Server.Services.ReportService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,13 +12,15 @@ db.Database.EnsureCreated();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyCORS", builder =>
     {
         builder.WithOrigins("https://localhost:7199")
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .WithExposedHeaders("Content-Disposition");
     });
 });
 
@@ -257,6 +257,33 @@ app.MapGet("/genders", async () =>
             StatusCode = StatusCodes.Status200OK
         });
     }
+});
+
+app.MapGet("/users/generate-report", async (IReportService reportService, [FromQueryAttribute] string type) =>
+{
+    IEnumerable<User> users = await db.Users
+        .Include(u => u.Gender)
+        .Include(u => u.CustomFields)
+        .ToListAsync();
+    string contentType = string.Empty;
+    string fileDownloadName = string.Empty;
+    byte[] fileContent = null;
+
+    if (type == "excel")
+    {
+        fileContent = await reportService.GenerateExcelReport(users);
+        contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        fileDownloadName = $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}.xlsx";
+    }
+    else if (type == "csv")
+    {
+        fileContent = await reportService.GenerateCsvReport(users);
+        contentType = "text/csv";
+        fileDownloadName = $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}.csv";
+    }
+
+    
+    return Results.File(fileContents: fileContent, contentType: contentType, fileDownloadName: fileDownloadName);
 });
 
 app.Run();

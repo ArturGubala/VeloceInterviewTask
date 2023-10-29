@@ -2,9 +2,9 @@
 
 namespace UserSpying.Client.HttpRepository.CustomFields
 {
-    public interface ICustomField
+    public interface ICustomFieldHttpRepository
     {
         Task<Response<int?>> CreateCustomField(int userId, UpsertCustomField customField);
-        Task<Response<UserSpying.Shared.Models.CustomField?>> updateCustomFieldAsync(int userId, UpsertCustomField upsertCustomField);
+        Task<Response<CustomField?>> updateCustomFieldAsync(int userId, UpsertCustomField upsertCustomField);
     }
 }

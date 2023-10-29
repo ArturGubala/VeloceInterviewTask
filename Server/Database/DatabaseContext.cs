@@ -90,6 +90,22 @@ namespace UserSpying.Server.Database
                 new Gender { Id = 1, Name = "Mężczyzna", Abbreviation = 'M', Honorific = "Pan" },
                 new Gender { Id = 2, Name = "Kobieta", Abbreviation = 'K', Honorific = "Pani" }
             );
+
+            modelBuilder.Entity<User>().HasData(
+                new User { Id = 1, FirstName = "Marek", LastName = "Mostowiak", DateOfBirth = new DateTime(1972, 2, 3), GenderId = 1},
+                new User { Id = 2, FirstName = "Hanna", LastName = "Mostowiak", DateOfBirth = new DateTime(1976, 11, 15), GenderId = 2},
+                new User { Id = 3, FirstName = "Seba", LastName = "Sebastian", DateOfBirth = new DateTime(1991, 5, 29), GenderId = 1}
+            );
+
+            modelBuilder.Entity<CustomField>().HasData(
+                new CustomField { Id = 1, UserId = 1, Name = "Robi mu się niedobrze na myśl o", Value = "kartonach"},
+                new CustomField { Id = 2, UserId = 1, Name = "Numer telefonu", Value = "745215335"},
+                new CustomField { Id = 3, UserId = 2, Name = "Ulubiona kawa", Value = "Flat White"},
+                new CustomField { Id = 4, UserId = 2, Name = "Rok wydania prawa jazdy", Value = "1995"},
+                new CustomField { Id = 5, UserId = 2, Name = "Rozmiar buta", Value = "40"},
+                new CustomField { Id = 6, UserId = 3, Name = "Ksywa na dzielni", Value = "TypowySeba"},
+                new CustomField { Id = 7, UserId = 3, Name = "Ulubiony fast food", Value = "Wrap z mcdonald"}
+            );
         }
 
     }

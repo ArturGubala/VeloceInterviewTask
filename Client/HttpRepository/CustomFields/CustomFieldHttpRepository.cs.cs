@@ -1,15 +1,14 @@
 ﻿using Flurl.Http;
 using Flurl;
 using UserSpying.Shared.Models;
-using static UserSpying.Client.Shared.Dialogs.AddUserDialog;
 
 namespace UserSpying.Client.HttpRepository.CustomFields
 {
-    public class CustomField : ICustomField
+    public class CustomFieldHttpRepository : ICustomFieldHttpRepository
     {
         private readonly HttpClient _httpClient;
 
-        public CustomField(HttpClient httpClient)
+        public CustomFieldHttpRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
@@ -34,24 +33,24 @@ namespace UserSpying.Client.HttpRepository.CustomFields
             }
         }
 
-        public async Task<Response<UserSpying.Shared.Models.CustomField?>> updateCustomFieldAsync(int customFieldId, UpsertCustomField upsertCustomField)
+        public async Task<Response<CustomField?>> updateCustomFieldAsync(int customFieldId, UpsertCustomField upsertCustomField)
         {
             try
             {
-                Response<UserSpying.Shared.Models.CustomField?> response = await _httpClient.BaseAddress
+                Response<CustomField?> response = await _httpClient.BaseAddress
                     .AppendPathSegment($"custom-fields")
                     .AppendPathSegment($"{customFieldId}")
                     .WithHeader("Accept", "*/*")
                     .WithHeader("Content-Type", "application/json")
                     .PutJsonAsync(upsertCustomField)
-                    .ReceiveJson<Response<UserSpying.Shared.Models.CustomField?>>();
+                    .ReceiveJson<Response<CustomField?>>();
 
                 return response;
             }
             catch (FlurlHttpException flurlHttpException)
             {
                 var test = await flurlHttpException.GetResponseJsonAsync();
-                return await flurlHttpException.GetResponseJsonAsync<Response<UserSpying.Shared.Models.CustomField?>>();
+                return await flurlHttpException.GetResponseJsonAsync<Response<CustomField?>>();
             }
         }
     }

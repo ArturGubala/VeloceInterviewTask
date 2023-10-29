@@ -2,7 +2,7 @@
 @using CustomField = UserSpying.Shared.Models.CustomField
 @using UserSpying.Client.HttpRepository.CustomFields
 
-@inject ICustomField CustomFieldHttpRepository
+@inject ICustomFieldHttpRepository CustomFieldHttpRepository
 @inject ISnackbar Snackbar
 
 <MudTable Items="@CustomFields" Context="CustomFieldsContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0"
