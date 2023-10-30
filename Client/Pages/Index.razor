@@ -15,7 +15,7 @@
 @inject ISnackbar Snackbar
 
 <MudGrid Justify="Justify.Center">
-    <MudItem xs="6" Class="px-8 pt-5">
+    <MudItem md="12" lg="6" Class="px-8 pt-5">
         <MudTable Items="@CustomUsers" Dense="true" Hover="true" ReadOnly="false" CanCancelEdit="true" Filter="new Func<CustomUser,bool>(FilterFunc)"
                   SortLabel="Sort By" CommitEditTooltip="Zapisz zmiany" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
                   IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" OnCommitEditClick="ItemHasBeenCommitted"
@@ -50,10 +50,10 @@
             <RowEditingTemplate>
                 <MudTd></MudTd>
                 <MudTd DataLabel="Sign">
-                    <MudTextField @bind-Value="@context.FirstName" Required/>
+                    <MudTextField @bind-Value="@context.FirstName" Required MaxLength="50"/>
                 </MudTd>
                 <MudTd DataLabel="Name">
-                    <MudTextField @bind-Value="@context.LastName" Required/>
+                    <MudTextField @bind-Value="@context.LastName" Required MaxLength="150"/>
                 </MudTd>
                 <MudTd DataLabel="Position">
                      <MudDatePicker Label="Data urodzenia" @bind-Date="@context.DateOfBirth" Variant="Variant.Text" Required RequiredError="Musisz podać datę urodzenia"

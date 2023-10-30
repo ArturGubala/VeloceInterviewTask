@@ -14,8 +14,8 @@
                 <MudPaper Class="d-flex align-start flex-column justify-center mud-width-full py-8">
                     <MudText Class="px-3">Dane podstawowe</MudText>
                     <MudForm Model="upsertUser" @ref="formBaseData" @bind-IsValid="@formBaseDataSuccess" Class="mud-width-full px-3">
-                        <MudTextField @bind-Value="upsertUser.FirstName" T="string" Label="Imie" Required="true" RequiredError="Musisz podać imię użytkownika" Variant="Variant.Outlined" />
-                        <MudTextField @bind-Value="upsertUser.LastName" T="string" Label="Nazwisko" Required="true" RequiredError="Musisz podać nazwisko użytkownika" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="upsertUser.FirstName" T="string" Label="Imie" Required="true" RequiredError="Musisz podać imię użytkownika" Variant="Variant.Outlined" MaxLength="50" />
+                        <MudTextField @bind-Value="upsertUser.LastName" T="string" Label="Nazwisko" Required="true" RequiredError="Musisz podać nazwisko użytkownika" Variant="Variant.Outlined" MaxLength="150" />
                         <MudSelect @bind-Value="selectedGender" T="Gender" Label="Płeć" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Dense="true" Required RequiredError="Musisz wybrać płeć">
                             @foreach (Gender gender in Genders)
                             {
